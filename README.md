@@ -6,7 +6,7 @@ TPCTransaction是依据两阶段提交理论实现的分布式事务框架。以
 
 ## 实现要点
 
-1. 被调用方的业务按正常本地事务实现，TPCTransaction框架会根据注解拦截该接口的调用，将该事务转为异步事务，将完成全部数据库操作即commit前将事务锁住，并将结果提交至主线程正常返回
+1. 被调用方的业务按正常本地事务实现，TPCTransaction框架会根据注解拦截该接口的调用，将该事务转为异步事务，当完成全部数据库操作即commit前将事务锁住，并将结果提交至主线程正常返回
 2. 发起方完成各个服务的调用后，如果一切正常，将向所有参与方同时发起Commit请求。参与方收到Commit请求后，解锁异步事务，完成commit。
 3. 若发起方遇到错误需要回滚，则向所有已参与方同时发起Rollback请求。参与方收到Rollback请求后，解锁异步事务，完成rollback。
 
@@ -54,7 +54,6 @@ public void transferIn4TPC(String userId, double amount) throws Exception {
 
 下载snowflake工程：[https://github.com/johnhuang-cn/snowflake-uid](https://github.com/johnhuang-cn/snowflake-uid)，并执行maven install。本项目使用它生成全局事务唯一ID。
 
-a
 
 ### EnableTPC
 
