@@ -1,0 +1,4 @@
+# eureka-server
+spring:
+  profiles:
+    active: local

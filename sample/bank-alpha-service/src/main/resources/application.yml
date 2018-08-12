@@ -1,0 +1,28 @@
+management:
+  endpoint:
+    health:
+      show-details: always
+    
+server:
+  port: 8080
+  tomcat:
+    max-threads: 500
+    
+eureka:
+  client:
+    healthcheck:
+      enabled: true
+    serviceUrl:
+      defaultZone: ${eureka_servers:http://localhost:8761/eureka/}
+  instance:
+    instance-id: ${spring.application.name}:${server.port}
+    prefer-ip-address: true          
+
+logging:
+  level:
+    root: info
+    path: ./logs/
+    
+spring:
+  application:
+    name: bank-alpha
