@@ -6,7 +6,7 @@ TPCTransaction是依据两阶段提交理论实现的分布式事务框架。以
 
 ## 实现要点
 
-1. 被调用方的业务按正常本地事务实现，TPCTransaction框架会根据注解拦截该接口的调用，将该事务转为异步事务，当完成全部数据库操作即commit前将事务锁住，并将结果提交至主线程正常返回
+1. 被调用方的业务按正常本地事务实现，TPCTransaction框架会根据注解拦截该接口的调用，将该事务转为异步事务，将完成全部数据库操作即commit前将事务锁住，并将结果提交至主线程正常返回
 2. 发起方完成各个服务的调用后，如果一切正常，将向所有参与方同时发起Commit请求。参与方收到Commit请求后，解锁异步事务，完成commit。
 3. 若发起方遇到错误需要回滚，则向所有已参与方同时发起Rollback请求。参与方收到Rollback请求后，解锁异步事务，完成rollback。
 
@@ -26,14 +26,14 @@ private TPCTransactionManager tm;
 
 
 try {
-	tm.timeout(5).begin();
-	alphaAccountService.changeAmountForUserId4TPC(userId, -amount);
-	bravoAccountService.changeAmountForUserId4TPC(userId, amount);
-	tm.commit(IAlphaAccountService.class, IBravoAccountService.class);
-	isSuccess = true;
+    tm.timeout(5).begin();
+    alphaAccountService.changeAmountForUserId4TPC(userId, -amount);
+    bravoAccountService.changeAmountForUserId4TPC(userId, amount);
+    tm.commit(IAlphaAccountService.class, IBravoAccountService.class);
+    isSuccess = true;
 } catch (Exception e) {
-	tm.rollback(e, IAlphaAccountService.class, IBravoAccountService.class);
-	err = e.getMessage();
+    tm.rollback(e, IAlphaAccountService.class, IBravoAccountService.class);
+    err = e.getMessage();
 }
 ```
 
@@ -42,7 +42,7 @@ try {
 ```
 @TPCTransactional
 public void transferIn4TPC(String userId, double amount) throws Exception {
-	int count = mapper.increaseAmount(userId, amount);
+    int count = mapper.increaseAmount(userId, amount);
 }
 ```
 
@@ -50,10 +50,27 @@ public void transferIn4TPC(String userId, double amount) throws Exception {
 
 ### 依赖
 
-下载本工程，导入TPC工程，并执行maven install
+下载本工程，导入TPC工程，并执行mvn install
 
-下载snowflake工程：[https://github.com/johnhuang-cn/snowflake-uid](https://github.com/johnhuang-cn/snowflake-uid)，并执行maven install。本项目使用它生成全局事务唯一ID。
+下载snowflake工程：[https://github.com/johnhuang-cn/snowflake-uid](https://github.com/johnhuang-cn/snowflake-uid)，并执行mvn install。本项目使用它生成全局事务唯一ID。
 
+### 设置DataSource和TransactionManager
+
+```
+@Configuration
+public class DSConfig {
+    @Bean
+    @ConfigurationProperties("spring.datasource.druid.alpha")
+    public DataSource dataSource(){
+        return DruidDataSourceBuilder.create().build();
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager (DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
+    }
+}
+```
 
 ### EnableTPC
 
@@ -64,9 +81,9 @@ public void transferIn4TPC(String userId, double amount) throws Exception {
 @EnableEurekaClient
 @EnableTPC
 public class BankBravoApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(BankBravoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BankBravoApplication.class, args);
+    }
 }
 ```
 
@@ -80,3 +97,4 @@ public class BankBravoApplication {
 参见：Sample/bank-alpha-service工程的AccountService.transferIn4TPC\(\)
 
 [https://github.com/johnhuang-cn/TPCTransaction/blob/master/sample/bank-alpha-service/src/main/java/net/xdevelop/template/bank/service/AccountService.java\#L54](https://github.com/johnhuang-cn/TPCTransaction/blob/master/sample/bank-alpha-service/src/main/java/net/xdevelop/template/bank/service/AccountService.java#L54)
+
