@@ -1,5 +1,7 @@
 # 2PC Transaction Framework
 
+代码解读：https://www.toutiao.com/i6588864072488321549/
+
 TPCTransaction是依据两阶段提交理论实现的分布式事务框架。以转帐事务为例，其实现原理如下：
 
 ![](/assets/Diagram.png)
